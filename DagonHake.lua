@@ -22,14 +22,12 @@ function DagonHake.OnUpdate()
 	DagonHake.Sleep(0.1, "updaterate");
 end
 
-DagonHake.font = Renderer.LoadFont("Tahoma", 20, Enum.FontWeight.EXTRABOLD)
-
 function DagonHake.FindTarget(me, item)
 	local dagondmg = Ability.GetLevelSpecialValueFor(item, "damage") + Ability.GetLevelSpecialValueFor(item, "damage") * (Hero.GetIntellectTotal(me) / 16 / 100)
 	local entities = Heroes.GetAll()
 	for index, ent in pairs(entities) do
-		if not Entity.IsSameTeam(me, ent) and NPC.IsEntityInRange(me, ent, Ability.GetCastRange(item) + NPC.GetCastRangeBonus(me)) then
-			local enemyhero = Heroes.Get(index)
+		local enemyhero = Heroes.Get(index)
+		if not Entity.IsSameTeam(me, enemyhero) and not NPC.IsLinkensProtected(enemyhero) and NPC.IsEntityInRange(me, enemyhero, Ability.GetCastRange(item) + NPC.GetCastRangeBonus(me)) then
 			local totaldmg = (1 - NPC.GetMagicalArmorValue(enemyhero)) * dagondmg
 			local isValid = DagonHake.CheckForModifiers(enemyhero)
 			if Entity.GetHealth(enemyhero) < totaldmg and isValid then return enemyhero end
