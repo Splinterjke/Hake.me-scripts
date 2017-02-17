@@ -303,7 +303,7 @@ function SkyWrathHake.IsEzKillable()
 
 	if SkyWrathHake.veil and Ability.IsReady(SkyWrathHake.veil) and Ability.IsCastable(SkyWrathHake.veil, Ability.GetManaCost(SkyWrathHake.veil)) and Menu.IsEnabled(SkyWrathHake.ItemsOptionID["veil"]) then
 		veilAmp = 0.25
-		reqMana = reqMana + Ability.GetManaCost(veil)
+		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.veil)
 	end	
 
 	if SkyWrathHake.silence and Ability.IsReady(SkyWrathHake.silence) and Ability.IsCastable(SkyWrathHake.silence, Ability.GetManaCost(SkyWrathHake.silence)) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["silence"]) then
