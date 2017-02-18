@@ -7,7 +7,7 @@ DagonHake.Modifiers = { [0] = "modifier_medusa_stone_gaze_stone", [1] = "modifie
 function DagonHake.OnUpdate()
     local hero = Heroes.GetLocal()
 	local player = Players.GetLocal()
-	if not hero or not Menu.IsEnabled(DagonHake.IsToggled) or not DagonHake.SleepCheck(0.1, "updaterate") or Hero.GetRespawnTime(SkyWrathHake.hero) > 0 then return end
+	if not hero or not Menu.IsEnabled(DagonHake.IsToggled) or not DagonHake.SleepCheck(0.1, "updaterate") or Hero.GetRespawnTime(hero) > 0 then return end
 	local dagon = NPC.GetItem(hero, "item_dagon", true)
 	if not dagon then
 		for i = 2, 5 do
