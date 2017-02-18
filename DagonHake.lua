@@ -7,7 +7,7 @@ DagonHake.Modifiers = { [0] = "modifier_medusa_stone_gaze_stone", [1] = "modifie
 function DagonHake.OnUpdate()
     local hero = Heroes.GetLocal()
 	local player = Players.GetLocal()
-	if not hero or not Menu.IsEnabled(DagonHake.IsToggled) or not DagonHake.SleepCheck(0.1, "updaterate") then return end
+	if not hero or not Menu.IsEnabled(DagonHake.IsToggled) or not DagonHake.SleepCheck(0.1, "updaterate") or Hero.GetRespawnTime(SkyWrathHake.hero) > 0 then return end
 	local dagon = NPC.GetItem(hero, "item_dagon", true)
 	if not dagon then
 		for i = 2, 5 do
@@ -27,7 +27,7 @@ function DagonHake.FindTarget(me, item)
 	local entities = Heroes.GetAll()
 	for index, ent in pairs(entities) do
 		local enemyhero = Heroes.Get(index)
-		if not Entity.IsSameTeam(me, enemyhero) and not NPC.IsLinkensProtected(enemyhero) and NPC.IsEntityInRange(me, enemyhero, Ability.GetCastRange(item) + NPC.GetCastRangeBonus(me)) then
+		if not Entity.IsSameTeam(me, enemyhero) and not NPC.IsLinkensProtected(enemyhero) and not NPC.IsIllusion(enemyhero) and NPC.IsEntityInRange(me, enemyhero, Ability.GetCastRange(item) + NPC.GetCastRangeBonus(me)) then
 			local totaldmg = (1 - NPC.GetMagicalArmorValue(enemyhero)) * dagondmg
 			local isValid = DagonHake.CheckForModifiers(enemyhero)
 			if Entity.GetHealth(enemyhero) < totaldmg and isValid then return enemyhero end

@@ -41,7 +41,7 @@ function SkyWrathHake.OnUpdate()
     if not Menu.IsEnabled(SkyWrathHake.IsToggled) then	return
 	end
     SkyWrathHake.hero = Heroes.GetLocal()
-	if NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" then
+	if NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" or Hero.GetRespawnTime(SkyWrathHake.hero) > 0 then
 		return
 	end
 	SkyWrathHake.player = Players.GetLocal()	 
@@ -52,7 +52,7 @@ end
 function SkyWrathHake.PrayToDog()
 	if not Menu.IsKeyDown(SkyWrathHake.combokey) then return end	
 	
-	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY) --Input.GetWorldCursorPos()
+	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
 	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
