@@ -3,6 +3,7 @@ local SkyWrathHake = {}
 SkyWrathHake.IsToggled = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Enabled", "")
 SkyWrathHake.combokey = Menu.AddKeyOption( {"Hero Specific", "SkyWrathHake"}, "Combo Key", Enum.ButtonCode.KEY_F)
 SkyWrathHake.harraskey = Menu.AddKeyOption( {"Hero Specific", "SkyWrathHake"}, "Harras Key", Enum.ButtonCode.KEY_D)
+SkyWrathHake.enemyInRange = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Closest to mouse range", "Range that makes assembly checking for enemy in selected range.", 100, 600, 100)
 
 SkyWrathHake.menuItems =  {atos = "Rod of Atos", hex = "Scythe of Vyse", eblade = "Ethereal blade", veil = "Veil of Discrod", dagon = "Dagon", orchid = "Orchid", blood = "Bloodthorn", shiva = "Shiva's guard"}
 SkyWrathHake.ItemsOptionID =  {atos, hex, eblade, veil, dagon, orchid, blood, shiva}
@@ -24,14 +25,14 @@ for k, v in pairs(SkyWrathHake.menuPopupLinkens) do
 end
 SkyWrathHake.IsBMToggled = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Check for BladeMail", "")
 SkyWrathHake.IsSRToggled = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Use Soul Ring", "")
-SkyWrathHake.IsBlinkToggled = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Use Blink Dagger", "")
-SkyWrathHake.IsEZKChecked = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Check for EZ Kill", "")
+SkyWrathHake.IsBlinkToggled = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Use Blink Dagger", "Auto-blink to target when Combo key is pressed.")
+SkyWrathHake.IsEZKChecked = Menu.AddOption( {"Hero Specific", "SkyWrathHake"}, "Check for EZ Kill", "Check if an enemy is ez-killable (low-mana costs and the fastest way to slay an enemy).")
 
 SkyWrathHake.Modifiers = { [0] = "modifier_medusa_stone_gaze_stone", [1] = "modifier_winter_wyvern_winters_curse", [2] = "modifier_item_lotus_orb_active"}
 SkyWrathHake.sleepers = {}
 
 SkyWrathHake.isezkillable = false
-SkyWrathHake.FarPredict = 500			-- custom this for fastmoving targets
+SkyWrathHake.FarPredict = 400			-- custom this for fastmoving targets
 SkyWrathHake.DoubleMFPredict = 610		-- custom this for double ulti with aghs
 SkyWrathHake.CloseInPredict = 300		-- custom this for low movespeed targets
 
@@ -51,8 +52,8 @@ end
 function SkyWrathHake.PrayToDog()
 	if not Menu.IsKeyDown(SkyWrathHake.combokey) then return end	
 	
-	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
-	if not SkyWrathHake.enemy then
+	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY) --Input.GetWorldCursorPos()
+	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
 	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
@@ -120,7 +121,7 @@ function SkyWrathHake.ArcaneHarras()
 	if not Menu.IsKeyDown(SkyWrathHake.harraskey) then return end	
 	
 	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
-	if not SkyWrathHake.enemy then
+	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), SkyWrathHake.enemyInRange, 0) then
 		return
 	end
 	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
