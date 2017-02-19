@@ -41,7 +41,7 @@ function SkyWrathHake.OnUpdate()
     if not Menu.IsEnabled(SkyWrathHake.IsToggled) then	return
 	end
     SkyWrathHake.hero = Heroes.GetLocal()
-	if NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" or Hero.GetRespawnTime(SkyWrathHake.hero) > 0 then
+	if NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" or not Entity.IsAlive(SkyWrathHake.hero) then
 		return
 	end
 	SkyWrathHake.player = Players.GetLocal()	 
@@ -121,7 +121,7 @@ function SkyWrathHake.ArcaneHarras()
 	if not Menu.IsKeyDown(SkyWrathHake.harraskey) then return end	
 	
 	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
-	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), SkyWrathHake.enemyInRange, 0) then
+	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
 	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
@@ -142,14 +142,14 @@ function SkyWrathHake.ArcaneHarras()
 	end
 end
 
---	SkyWrathHake.font = Renderer.LoadFont("Tahoma", 20, Enum.FontWeight.EXTRABOLD)
+-- SkyWrathHake.font = Renderer.LoadFont("Tahoma", 20, Enum.FontWeight.EXTRABOLD)
 
 function SkyWrathHake.OnDraw()
 	
 --	if SkyWrathHake.isezkillable then
 --		Renderer.DrawText(SkyWrathHake.font, 1000, 500, "ezkillable", 1)
 --	end
---	Renderer.DrawText(SkyWrathHake.font, 1000, 500, Entity.GetRotation(SkyWrathHake.enemy):GetVectors():__tostring(), 1)
+--	Renderer.DrawText(SkyWrathHake.font, 1000, 500, Hero.GetRespawnTime(SkyWrathHake.hero), 1)
 --	Renderer.DrawLine(math.floor(enemyPos:GetX()), math.floor(enemyPos:GetY()), math.floor(enemyPos:GetX() + SkyWrathHake.UnitVectorFromXYAngle(vec):GetX() * (500/1000) * NPC.GetMoveSpeed(enemy)), math.floor(enemyPos:GetY() + SkyWrathHake.UnitVectorFromXYAngle(vec):GetY() * (500/1000) * NPC.GetMoveSpeed(enemy)))
 	
 end
