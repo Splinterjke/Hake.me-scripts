@@ -121,7 +121,7 @@ function SkyWrathHake.ArcaneHarras()
 	if not Menu.IsKeyDown(SkyWrathHake.harraskey) then return end	
 	
 	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
-	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), SkyWrathHake.enemyInRange, 0) then
+	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
 	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
