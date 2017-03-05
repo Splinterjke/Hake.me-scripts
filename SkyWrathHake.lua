@@ -111,9 +111,6 @@ function SkyWrathHake.PrayToDog()
 		SkyWrathHake.UseItem(SkyWrathHake.blood, SkyWrathHake.ItemsOptionID["blood"])
 		SkyWrathHake.UseItem(SkyWrathHake.shiva, SkyWrathHake.ItemsOptionID["shiva"])
 		SkyWrathHake.Sleep(0.05, "combosleep")
-		if not NPC.IsAttacking(SkyWrathHake.hero) then
-			Player.PrepareUnitOrders(SkyWrathHake.player, Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_TARGET, SkyWrathHake.enemy, Vector(0,0,0), nil, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_HERO_ONLY, SkyWrathHake.hero, false, false)
-		end
 	end
 end
 
