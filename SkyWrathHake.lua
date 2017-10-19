@@ -1,6 +1,8 @@
 local SkyWrathHake = {}
 
 SkyWrathHake.IsToggled = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Enabled", "")
+SkyWrathHake.IsTargetParticleEnabled = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Target indicator", "Draws particle for current target")
+SkyWrathHake.IsConcShotParticleEnabled = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Concussive shot indicator", "Draws concussive shot particle if enemy is in range of cast")
 SkyWrathHake.combokey = Menu.AddKeyOption({"Hero Specific", "SkyWrathHake"}, "Combo Key", Enum.ButtonCode.KEY_F)
 SkyWrathHake.harraskey = Menu.AddKeyOption({"Hero Specific", "SkyWrathHake"}, "Harras Key", Enum.ButtonCode.KEY_D)
 SkyWrathHake.enemyInRange = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Closest to mouse range", "Range that makes assembly checking for enemy in selected range.", 100, 600, 100)
@@ -32,12 +34,17 @@ SkyWrathHake.IsDoubleUltiToggled = Menu.AddOption({"Hero Specific", "SkyWrathHak
 SkyWrathHake.Modifiers = {[0] = "modifier_medusa_stone_gaze_stone", [1] = "modifier_winter_wyvern_winters_curse", [2] = "modifier_item_lotus_orb_active"}
 SkyWrathHake.sleepers = {}
 
+SkyWrathHake.particleNextTime = 0
+SkyWrathHake.targetParticle = 0
+SkyWrathHake.cshotParticle = 0
+SkyWrathHake.cshotParticleEnemy = nil
+
 SkyWrathHake.atoSleep = 0
 SkyWrathHake.isezkillable = false
-SkyWrathHake.FarPredict = 390					-- custom this for fastmoving targets
-SkyWrathHake.DoubleMFRootedPredict = 610		-- custom this for double ulti with aghs
-SkyWrathHake.DoubleMFUnrootedPredict = 630		-- custom this for double ulti with aghs
-SkyWrathHake.CloseInPredict = 300				-- custom this for low movespeed targets
+SkyWrathHake.FarPredict = 390					
+SkyWrathHake.DoubleMFRootedPredict = 610		
+SkyWrathHake.DoubleMFUnrootedPredict = 630		
+SkyWrathHake.CloseInPredict = 300				
 
 function SkyWrathHake.OnUpdate()
 	--if GameRules.GetGameState()
@@ -47,10 +54,84 @@ function SkyWrathHake.OnUpdate()
 	if NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" or not Entity.IsAlive(SkyWrathHake.hero) then
 		return
 	end
-	SkyWrathHake.player = Players.GetLocal()	 
+	SkyWrathHake.player = Players.GetLocal()	
 	SkyWrathHake.enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
+	 
+	if Menu.IsEnabled(SkyWrathHake.IsConcShotParticleEnabled) then	
+		SkyWrathHake.GetCshotEnemy()
+	end 
 	SkyWrathHake.PrayToDog()
 	SkyWrathHake.ArcaneHarras()
+end
+
+function SkyWrathHake.GetCshotEnemy()
+	SkyWrathHake.cshotenemy = nil
+	local cshot = NPC.GetAbilityByIndex(SkyWrathHake.hero, 1)
+	if not cshot then return end
+	local heroes = Heroes.InRadius(Entity.GetAbsOrigin(SkyWrathHake.hero), Ability.GetCastRange(cshot), Entity.GetTeamNum(SkyWrathHake.hero), Enum.TeamType.TEAM_ENEMY)
+	if not heroes then return end
+	if cshot and heroes then			
+		local compDistance = Ability.GetCastRange(cshot)
+		for k, v in pairs(heroes) do
+			local curHero = heroes[k]
+			local distance = Entity.GetAbsOrigin(curHero):Distance(Entity.GetAbsOrigin(SkyWrathHake.hero)):Length2D()
+			if distance < compDistance then
+				SkyWrathHake.cshotenemy = curHero
+				compDistance = distance
+			end			
+		end
+	end		
+end
+
+function SkyWrathHake.OnDraw()
+	local particleEnemy = SkyWrathHake.enemy
+	if Menu.IsEnabled(SkyWrathHake.IsTargetParticleEnabled) then	
+		if(not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) and SkyWrathHake.targetParticle ~= 0) or SkyWrathHake.enemy ~= particleEnemy then
+			Particle.Destroy(SkyWrathHake.targetParticle)			
+			SkyWrathHake.targetParticle = 0
+			particleEnemy = SkyWrathHake.enemy
+		else
+			if SkyWrathHake.targetParticle == 0 and NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
+				SkyWrathHake.targetParticle = Particle.Create("particles/ui_mouseactions/range_finder_tower_aoe.vpcf", Enum.ParticleAttachment.PATTACH_INVALID, SkyWrathHake.enemy)				
+			end
+			if SkyWrathHake.targetParticle ~= 0 then
+				Particle.SetControlPoint(SkyWrathHake.targetParticle, 2, Entity.GetOrigin(SkyWrathHake.hero))
+				Particle.SetControlPoint(SkyWrathHake.targetParticle, 6, Vector(1, 0, 0))
+				Particle.SetControlPoint(SkyWrathHake.targetParticle, 7, Entity.GetOrigin(SkyWrathHake.enemy))
+			end
+		end
+	else 
+		if SkyWrathHake.targetParticle ~= 0 then
+			Particle.Destroy(SkyWrathHake.targetParticle)			
+			SkyWrathHake.targetParticle = 0
+		end
+	end
+
+	local cshot = NPC.GetAbilityByIndex(SkyWrathHake.hero, 1)
+	if Menu.IsEnabled(SkyWrathHake.IsConcShotParticleEnabled) then	
+		if not Ability.IsReady(cshot) or(not SkyWrathHake.cshotenemy and SkyWrathHake.cshotParticle ~= 0) or SkyWrathHake.cshotenemy ~= SkyWrathHake.cshotParticleEnemy then
+			Particle.Destroy(SkyWrathHake.cshotParticle)			
+			SkyWrathHake.cshotParticle = 0
+			SkyWrathHake.cshotParticleEnemy = SkyWrathHake.cshotenemy
+		else
+			if Ability.IsReady(cshot) and SkyWrathHake.cshotParticle == 0 and SkyWrathHake.cshotenemy then				
+				SkyWrathHake.cshotParticle = Particle.Create("particles/units/heroes/hero_skywrath_mage/skywrath_mage_concussive_shot.vpcf")
+			end
+			if SkyWrathHake.cshotParticle ~= 0 then
+				local customOrigin = Entity.GetAbsOrigin(SkyWrathHake.cshotenemy)
+				local zOrigin = customOrigin:GetZ()
+				customOrigin:SetZ(zOrigin + 310)
+				Particle.SetControlPoint(SkyWrathHake.cshotParticle, 0, customOrigin)
+				Particle.SetControlPoint(SkyWrathHake.cshotParticle, 1, customOrigin)
+				Particle.SetControlPoint(SkyWrathHake.cshotParticle, 2, Vector(500, 0, 0))					
+			end
+		end
+	else 
+		if SkyWrathHake.cshotParticle ~= 0 then
+			Particle.Destroy(SkyWrathHake.cshotParticle)			
+			SkyWrathHake.cshotParticle = 0
+		end
+	end
 end
 
 function SkyWrathHake.PrayToDog()
@@ -59,7 +140,7 @@ function SkyWrathHake.PrayToDog()
 	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
-	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
+	SkyWrathHake.enemyPos = Entity.GetAbsOrigin(SkyWrathHake.enemy)
 
 	if not NPC.HasState(SkyWrathHake.enemy, Enum.ModifierState.MODIFIER_STATE_ATTACK_IMMUNE) and not SkyWrathHake.SleepCheck(0.05, "combosleep") then	
 		Player.AttackTarget(SkyWrathHake.player, SkyWrathHake.hero, SkyWrathHake.enemy, false)
@@ -129,7 +210,7 @@ function SkyWrathHake.ArcaneHarras()
 	if not SkyWrathHake.enemy or not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) then
 		return
 	end
-	SkyWrathHake.enemyPos = NPC.GetAbsOrigin(SkyWrathHake.enemy)
+	SkyWrathHake.enemyPos = Entity.GetAbsOrigin(SkyWrathHake.enemy)
 
 	if not NPC.HasState(SkyWrathHake.enemy, Enum.ModifierState.MODIFIER_STATE_ATTACK_IMMUNE) then	
 		Player.AttackTarget(SkyWrathHake.player, SkyWrathHake.hero, SkyWrathHake.enemy, false)
@@ -287,7 +368,7 @@ function SkyWrathHake.UseItem(item, optionID)
 		end
 		if item == SkyWrathHake.atos then
 			Ability.CastTarget(item, SkyWrathHake.enemy)
-			SkyWrathHake.atoSleep = SkyWrathHake.enemyPos:Distance(NPC.GetAbsOrigin(SkyWrathHake.hero)):Length2D() / 1500
+			SkyWrathHake.atoSleep = SkyWrathHake.enemyPos:Distance(Entity.GetAbsOrigin(SkyWrathHake.hero)):Length2D() / 1500
 			SkyWrathHake.Sleep(SkyWrathHake.atoSleep, "atossleep")
 			return
 		end
@@ -305,7 +386,7 @@ function SkyWrathHake.UseBlink()
     
 		if NPC.IsEntityInRange(SkyWrathHake.hero, SkyWrathHake.enemy, 600) then return end
 
-		local myloc = NPC.GetAbsOrigin(SkyWrathHake.hero)
+		local myloc = Entity.GetAbsOrigin(SkyWrathHake.hero)
 		local distance = SkyWrathHake.enemyPos - myloc
 
 		distance:SetZ(0)
@@ -332,7 +413,7 @@ function SkyWrathHake.IsFullDebuffed()
 end
 
 function SkyWrathHake.SpellDamageTaken(magicresist)
-	local amplf = (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy) / 100) * (1 + magicresist / 100)
+	local amplf =(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy) / 100) *(1 + magicresist / 100)
 	return amplf
 end
 
@@ -352,37 +433,37 @@ function SkyWrathHake.IsEzKillable()
 	end	
 
 	if SkyWrathHake.silence and Ability.IsReady(SkyWrathHake.silence) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["silence"]) then
-		silenceAmp = (Ability.GetLevel(SkyWrathHake.silence) * 5 + 30) / 100
+		silenceAmp =(Ability.GetLevel(SkyWrathHake.silence) * 5 + 30) / 100
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.silence)
 	end
 
 	if SkyWrathHake.eblade and Ability.IsReady(SkyWrathHake.eblade) and Menu.IsEnabled(SkyWrathHake.ItemsOptionID["eblade"]) then
 		local ebladedamage = Hero.GetIntellectTotal(SkyWrathHake.hero) * 2 + 75
-		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + modifamplifiers) * (ebladedamage + ebladedamage * (Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
+		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + modifamplifiers) *(ebladedamage + ebladedamage *(Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
 		ebladeAmp = 0.4
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.eblade)
 	end	
 
 	if SkyWrathHake.dagon and Ability.IsReady(SkyWrathHake.dagon) and Menu.IsEnabled(SkyWrathHake.ItemsOptionID["dagon"]) then
 		local dagondmg = Ability.GetLevelSpecialValueFor(SkyWrathHake.dagon, "damage")
-		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (dagondmg + dagondmg * (Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
+		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(dagondmg + dagondmg *(Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.dagon)
 	end
                 
 	if SkyWrathHake.bolt and Ability.IsReady(SkyWrathHake.bolt) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["bolt"]) then
 		local boldamage = Ability.GetLevelSpecialValueFor(SkyWrathHake.bolt, "bolt_damage") + Hero.GetIntellectTotal(SkyWrathHake.hero) * 1.6
 		if Ability.GetLevel(SkyWrathHake.bolt) < 3 then
-			totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (boldamage + boldamage * (Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
+			totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(boldamage + boldamage *(Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
 			reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.bolt)                    
 		else
-			totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (boldamage + boldamage * (Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100)) * 2
+			totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(boldamage + boldamage *(Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100)) * 2
 			reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.bolt) * 2
 		end
 	end
 
 	if SkyWrathHake.slow and Ability.IsReady(SkyWrathHake.slow) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["slow"]) then
 		local slowdamage = Ability.GetLevelSpecialValueFor(SkyWrathHake.slow, "damage")
-		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (slowdamage + slowdamage * (Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
+		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(slowdamage + slowdamage *(Hero.GetIntellectTotal(SkyWrathHake.hero) / 14 / 100))
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.slow)
 	end
                 
@@ -405,8 +486,8 @@ function SkyWrathHake.InFront(delay)
 		adjusment = 300
 	end
 	if vec then		
-		local x = SkyWrathHake.enemyPos:GetX() + vec:GetX() *(delay / 1000) * adjusment
-		local y = SkyWrathHake.enemyPos:GetY() + vec:GetY() *(delay / 1000) * adjusment
+		local x = SkyWrathHake.enemyPos:GetX() + vec:GetX() * (delay / 1000) * adjusment
+		local y = SkyWrathHake.enemyPos:GetY() + vec:GetY() * (delay / 1000) * adjusment
 		return Vector(x, y, 0)
 	end
 end
