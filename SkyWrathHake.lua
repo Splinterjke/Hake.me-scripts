@@ -84,7 +84,7 @@ end
 function SkyWrathHake.OnDraw()
 	local particleEnemy = SkyWrathHake.enemy
 	if Menu.IsEnabled(SkyWrathHake.IsTargetParticleEnabled) then	
-		if(not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) and SkyWrathHake.targetParticle ~= 0) or SkyWrathHake.enemy ~= particleEnemy then
+		if not particleEnemy or (not NPC.IsPositionInRange(SkyWrathHake.enemy, Input.GetWorldCursorPos(), Menu.GetValue(SkyWrathHake.enemyInRange), 0) and SkyWrathHake.targetParticle ~= 0) or SkyWrathHake.enemy ~= particleEnemy then
 			Particle.Destroy(SkyWrathHake.targetParticle)			
 			SkyWrathHake.targetParticle = 0
 			particleEnemy = SkyWrathHake.enemy
