@@ -83,6 +83,15 @@ end
 
 function SkyWrathHake.OnDraw()
 	if SkyWrathHake.hero == nil or NPC.GetUnitName(SkyWrathHake.hero) ~= "npc_dota_hero_skywrath_mage" or not Entity.IsAlive(SkyWrathHake.hero) then
+		if SkyWrathHake.targetParticle ~= 0 then
+			Particle.Destroy(SkyWrathHake.targetParticle)			
+			SkyWrathHake.targetParticle = 0
+			particleEnemy = SkyWrathHake.enemy
+		end
+		if SkyWrathHake.cshotParticle ~= 0 then
+			Particle.Destroy(SkyWrathHake.cshotParticle)			
+			SkyWrathHake.cshotParticle = 0
+		end
 		return
 	end
 	local particleEnemy = SkyWrathHake.enemy
