@@ -2,7 +2,7 @@ local DagonHake = {}
 
 DagonHake.IsToggled = Menu.AddOption({"Utility"}, "DagonHake", "")
 DagonHake.sleepers = {}
-DagonHake.Modifiers = {[0] = "modifier_medusa_stone_gaze_stone", [1] = "modifier_winter_wyvern_winters_curse", [2] = "modifier_item_lotus_orb_active", [3] = "modifier_templar_assassin_refraction_absorb", [4] = "modifier_item_blade_mail_reflect", [5] = "modifier_nyx_assassin_spiked_carapace" }
+DagonHake.Modifiers = {[0] = "modifier_medusa_stone_gaze_stone",[1] = "modifier_winter_wyvern_winters_curse",[2] = "modifier_item_lotus_orb_active",[3] = "modifier_templar_assassin_refraction_absorb",[4] = "modifier_item_blade_mail_reflect",[5] = "modifier_nyx_assassin_spiked_carapace" }
 
 function DagonHake.OnUpdate()
 	local hero = Heroes.GetLocal()
@@ -21,25 +21,7 @@ function DagonHake.OnUpdate()
 	DagonHake.Sleep(0.1, "updaterate");
 end
 
---DagonHake.font = Renderer.LoadFont("Tahoma", 20, Enum.FontWeight.EXTRABOLD)
---
---function DagonHake.OnDraw()
---	
---	local hero = Heroes.GetLocal()
---	local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(hero), Enum.TeamType.TEAM_ENEMY)
-----	local dagon = NPC.GetItem(hero, "item_dagon", true)
-----	if not dagon then
-----		for i = 2, 5 do
-----			dagon = NPC.GetItem(hero, "item_dagon_" .. i, true)
-----			if dagon then break end
-----		end
-----	end
---
---	
---	Renderer.DrawText(DagonHake.font, 1000, 500, NPC.GetAbsOrigin(hero):Distance(NPC.GetAbsOrigin(enemy)):Length2D() / 1500, 1)
-----	Renderer.DrawText(DagonHake.font, 1000, 520, NPC.GetDamageMultiplierVersus(enemy, hero), 1)
-----	Renderer.DrawText(DagonHake.font, 1000, 540, NPC.GetDamageMultiplierVersus(hero, hero), 1)
---end
+DagonHake.font = Renderer.LoadFont("Tahoma", 20, Enum.FontWeight.EXTRABOLD)
 
 function DagonHake.FindTarget(me, item)	
 	local entities = Heroes.GetAll()
@@ -51,8 +33,9 @@ function DagonHake.FindTarget(me, item)
 				amplf = 0.1
 			end
 			amplf = amplf + DagonHake.GetAmplifiers(me, enemyhero)
-			local dagondmg = Ability.GetLevelSpecialValueFor(item, "damage") + Ability.GetLevelSpecialValueFor(item, "damage") * (Hero.GetIntellectTotal(me) * 0.07 + amplf)
+			local dagondmg = Ability.GetLevelSpecialValueFor(item, "damage") + Ability.GetLevelSpecialValueFor(item, "damage") *(Hero.GetIntellectTotal(me)/100 * (0.066891 + amplf))
 			local totaldmg = NPC.GetMagicalArmorDamageMultiplier(enemyhero) * dagondmg
+			Log.Write(totaldmg)
 			local isValid = DagonHake.CheckForModifiers(enemyhero)
 			if Entity.GetHealth(enemyhero) < totaldmg and isValid then return enemyhero end
 		end
