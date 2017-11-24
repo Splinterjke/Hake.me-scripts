@@ -35,7 +35,6 @@ function DagonHake.FindTarget(me, item)
 			amplf = amplf + DagonHake.GetAmplifiers(me, enemyhero)
 			local dagondmg = Ability.GetLevelSpecialValueFor(item, "damage") + Ability.GetLevelSpecialValueFor(item, "damage") *(Hero.GetIntellectTotal(me)/100 * (0.066891 + amplf))
 			local totaldmg = NPC.GetMagicalArmorDamageMultiplier(enemyhero) * dagondmg
-			Log.Write(totaldmg)
 			local isValid = DagonHake.CheckForModifiers(enemyhero)
 			if Entity.GetHealth(enemyhero) < totaldmg and isValid then return enemyhero end
 		end
