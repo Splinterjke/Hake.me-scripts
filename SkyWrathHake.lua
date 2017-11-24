@@ -31,7 +31,7 @@ SkyWrathHake.IsBlinkToggled = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, 
 SkyWrathHake.IsEZKChecked = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Check for EZ Kill", "Check if an enemy is ez-killable (low-mana costs and the fastest way to slay an enemy).")
 SkyWrathHake.IsDoubleUltiToggled = Menu.AddOption({"Hero Specific", "SkyWrathHake"}, "Double ulti mode", "Casts double ulti with aghanim scepter item/buff equiped.")
 
-SkyWrathHake.Modifiers = {[0] = "modifier_medusa_stone_gaze_stone", [1] = "modifier_winter_wyvern_winters_curse", [2] = "modifier_item_lotus_orb_active"}
+SkyWrathHake.Modifiers = {[0] = "modifier_medusa_stone_gaze_stone",[1] = "modifier_winter_wyvern_winters_curse",[2] = "modifier_item_lotus_orb_active"}
 SkyWrathHake.sleepers = {}
 
 SkyWrathHake.targetParticle = 0
@@ -434,7 +434,7 @@ function SkyWrathHake.IsFullDebuffed()
 end
 
 function SkyWrathHake.SpellDamageTaken(magicresist)
-	local amplf =(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy) / 100) *(1 + magicresist / 100)
+	local amplf = (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy) / 100) * (1 + magicresist / 100)
 	return amplf
 end
 
@@ -443,8 +443,12 @@ function SkyWrathHake.IsEzKillable()
 	if not SkyWrathHake.SleepCheck(3.0, "ezkillcheck") then return true end
 	local modifamplifiers = SkyWrathHake.GetAmplifiers(SkyWrathHake.hero, SkyWrathHake.enemy)
 	local totalDamage = 0
-	local veilAmp = 0
+	local veilAmp = 0	
 	local silenceAmp = 0
+	local talentAmp = NPC.GetAbilityByIndex(SkyWrathHake.hero, 11)
+	if Ability.GetLevel(talentAmp) > 0 then
+		silenceAmp = silenceAmp + 0.15
+	end
 	local ebladeAmp = 0
 	local reqMana = 0
 	local perkAmp = Hero.GetIntellectTotal(SkyWrathHake.hero) / 100 * 0.066891
@@ -455,41 +459,41 @@ function SkyWrathHake.IsEzKillable()
 	end	
 
 	if SkyWrathHake.silence and Ability.IsReady(SkyWrathHake.silence) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["silence"]) then
-		silenceAmp =(Ability.GetLevel(SkyWrathHake.silence) * 5 + 30) / 100
+		silenceAmp = silenceAmp + (Ability.GetLevel(SkyWrathHake.silence) * 5 + 30) / 100
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.silence)
 	end
 
 	if SkyWrathHake.eblade and Ability.IsReady(SkyWrathHake.eblade) and Menu.IsEnabled(SkyWrathHake.ItemsOptionID["eblade"]) then
 		local ebladedamage = Hero.GetIntellectTotal(SkyWrathHake.hero) * 2 + 75
-		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + modifamplifiers) *(ebladedamage + ebladedamage * perkAmp)
+		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + modifamplifiers) * (ebladedamage + ebladedamage * perkAmp)
 		ebladeAmp = 0.4
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.eblade)
 	end	
 
-	if SkyWrathHake.dagon and Ability.IsReady(SkyWrathHake.dagon) and Menu.IsEnabled(SkyWrathHake.ItemsOptionID["dagon"]) then
+	if SkyWrathHake.dagon and Ability.IsReady(SkyWrathHake.dagon) then
 		local dagondmg = Ability.GetLevelSpecialValueFor(SkyWrathHake.dagon, "damage")
-		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(dagondmg + dagondmg * perkAmp)
+		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (dagondmg + dagondmg * perkAmp)
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.dagon)
 	end
                 
 	if SkyWrathHake.bolt and Ability.IsReady(SkyWrathHake.bolt) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["bolt"]) then
 		local boldamage = Ability.GetLevelSpecialValueFor(SkyWrathHake.bolt, "bolt_damage") + Hero.GetIntellectTotal(SkyWrathHake.hero) * 1.6
 		if Ability.GetLevel(SkyWrathHake.bolt) < 3 then
-			totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(boldamage + boldamage * perkAmp)
+			totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (boldamage + boldamage * perkAmp)
 			reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.bolt)                    
 		else
-			totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(boldamage + boldamage * perkAmp) * 2
+			totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (boldamage + boldamage * perkAmp) * 2
 			reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.bolt) * 2
 		end
 	end
 
 	if SkyWrathHake.slow and Ability.IsReady(SkyWrathHake.slow) and Menu.IsEnabled(SkyWrathHake.AbilitiesOptionID["slow"]) then
 		local slowdamage = Ability.GetLevelSpecialValueFor(SkyWrathHake.slow, "damage")
-		totalDamage = totalDamage +(1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) *(1 + silenceAmp) *(1 + veilAmp) *(1 + ebladeAmp) *(1 + modifamplifiers) *(slowdamage + slowdamage * perkAmp)
+		totalDamage = totalDamage + (1 - NPC.GetMagicalArmorValue(SkyWrathHake.enemy)) * (1 + silenceAmp) * (1 + veilAmp) * (1 + ebladeAmp) * (1 + modifamplifiers) * (slowdamage + slowdamage * perkAmp)
 		reqMana = reqMana + Ability.GetManaCost(SkyWrathHake.slow)
 	end               
-	
-	if reqMana < NPC.GetMana(SkyWrathHake.hero) and Entity.GetHealth(SkyWrathHake.enemy) < totalDamage + 70 then
+
+	if reqMana < NPC.GetMana(SkyWrathHake.hero) and Entity.GetHealth(SkyWrathHake.enemy) < totalDamage + 70 then		
 		SkyWrathHake.Sleep(3.0, "ezkillcheck")		
 		return true
 	else
@@ -504,8 +508,8 @@ function SkyWrathHake.InFront(delay)
 		adjusment = 300
 	end
 	if vec then		
-		local x = SkyWrathHake.enemyPos:GetX() + vec:GetX() * (delay / 1000) * adjusment
-		local y = SkyWrathHake.enemyPos:GetY() + vec:GetY() * (delay / 1000) * adjusment
+		local x = SkyWrathHake.enemyPos:GetX() + vec:GetX() *(delay / 1000) * adjusment
+		local y = SkyWrathHake.enemyPos:GetY() + vec:GetY() *(delay / 1000) * adjusment
 		return Vector(x, y, 0)
 	end
 end
